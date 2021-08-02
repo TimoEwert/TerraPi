@@ -30,26 +30,22 @@ def setup():
 
 def loop():
   for index in range(len(deviceID)):
-  
-    
     DS18B20 = getTemp(deviceID[index])
     tempDS18B20=DS18B20
     HumidityBME280="%0.0f" % bme280.relative_humidity
     fanstatus=luefter(HumidityBME280)
     TempBMe280="%0.0f" % bme280.temperature
-    
     lcd.printString("W\xE1rme Spot: " + tempDS18B20 + chr(223) + "C", lcd.LINE_1)
-    ldc.printString("Fanstatus: " + fanstatus,lcd.LINE_2)
+    lcd.printString("Fanstatus: " + fanstatus,lcd.LINE_2)
     lcd.printString("Temperatur: " + TempBMe280 + chr(223) + "C", lcd.LINE_3)
     lcd.printString("Luftfeuchtigkeit:" + HumidityBME280 + "%", lcd.LINE_4)
-    
     sleep(1)
 
 def luefter(humidity):
     humidity=int(humidity)
     if(humidity >= 90):
         my_pwm.ChangeDutyCycle(100)
-        fanstatus = ("ON 100%")        
+        fanstatus = ("ON 100%")
     elif(humidity >= 80):
         my_pwm.ChangeDutyCycle(75)
         fanstatus = ("ON 75%")
@@ -67,7 +63,7 @@ def luefter(humidity):
         my_pwm.stop()
         GPIO.cleanup()
         sntemp= False
-    
+
     return fanstatus
 
 
