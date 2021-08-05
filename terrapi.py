@@ -15,11 +15,11 @@ config = configparser.ConfigParser()
 config.read(".env")
 
 raintime=config["Configuration"]["raintime"]
-ip_shelly=config["Configuration"]["ip_shelly1"]
+ip_shelly1=config["Configuration"]["ip_shelly1"]
 rainduration=config["Configuration"]["rainduration"]
 device=config["Configuration"]["device"]
 sea_level_pressure=config["Configuration"]["sea_level_pressure"]
-gpio_for_IRF520=config["Configuration"]["gpio_for_IRF520"]
+gpio_for_IRF520=int(config["Configuration"]["gpio_for_IRF520"])
 
 
 i2c = board.I2C()  # uses board.SCL and board.SDA
@@ -43,7 +43,6 @@ def loop():
     DS18B20 = getTemp(device)
     tempDS18B20=DS18B20
     rain()
-    print(sea_level_pressure)
     HumidityBME280="%0.0f" % bme280.relative_humidity    
     fanstatus=luefter(HumidityBME280)
     TempBMe280="%0.0f" % bme280.temperature
@@ -54,14 +53,12 @@ def loop():
     sleep(1)
 
 
-
 def rain():    
     actualtime = datetime.datetime.now()
     actualtime = int(actualtime.strftime('%H%M'))
     if (actualtime == raintime):
         lcd.printString("Bew\xE1sserungsvorgang", lcd.LINE_2)
         my_pwm.ChangeDutyCycle(0)
-        print("Bewässungsvorgang")
         requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
         sleep(rainduration)
         requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
