@@ -25,9 +25,13 @@ sudo python3 raspi-blinka.py
 sudo pip3 install adafruit-circuitpython-bme280 
 ```
 
-### Clone this repostiroy:
+### Clone this repository
 `git clone git@github.com:TimoEwert/TerraPi.git`
 
-### Go into the newly created TerraPi folder and run 
+### Go into the newly created TerraPi folder 
+copy/rename the `.env-samplefile` to `.env` and edit the values to your needs
+
+
+## Run the script
 `python3 terrapi.py`
 

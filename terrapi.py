@@ -7,19 +7,30 @@ import time
 import RPi.GPIO as GPIO
 import board 
 from adafruit_bme280 import basic as adafruit_bme280
+import requests
+import configparser
+import datetime
 
-deviceID = ['/sys/bus/w1/devices/28-0000073be7d4/w1_slave']
-devicePurpose = ['Temp_ds18b20:']
+config = configparser.ConfigParser()
+config.read(".env")
+
+raintime=config["Configuration"]["raintime"]
+ip_shelly=config["Configuration"]["ip_shelly1"]
+rainduration=config["Configuration"]["rainduration"]
+device=config["Configuration"]["device"]
+sea_level_pressure=config["Configuration"]["sea_level_pressure"]
+gpio_for_IRF520=config["Configuration"]["gpio_for_IRF520"]
+
 
 i2c = board.I2C()  # uses board.SCL and board.SDA
 bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c)
-bme280.sea_level_pressure = 1013.25
+bme280.sea_level_pressure = sea_level_pressure
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-red=12
-GPIO.setup(red,GPIO.OUT)
-my_pwm=GPIO.PWM(red,100)
+
+GPIO.setup(gpio_for_IRF520,GPIO.OUT)
+my_pwm=GPIO.PWM(gpio_for_IRF520,100)
 my_pwm.start(0)
 
 #################################################################################################
@@ -29,10 +40,11 @@ def setup():
   lcd.initialize()
 
 def loop():
-  for index in range(len(deviceID)):
-    DS18B20 = getTemp(deviceID[index])
+    DS18B20 = getTemp(device)
     tempDS18B20=DS18B20
-    HumidityBME280="%0.0f" % bme280.relative_humidity
+    rain()
+    print(sea_level_pressure)
+    HumidityBME280="%0.0f" % bme280.relative_humidity    
     fanstatus=luefter(HumidityBME280)
     TempBMe280="%0.0f" % bme280.temperature
     lcd.printString("W\xE1rme Spot: " + tempDS18B20 + chr(223) + "C", lcd.LINE_1)
@@ -40,6 +52,22 @@ def loop():
     lcd.printString("Temperatur: " + TempBMe280 + chr(223) + "C", lcd.LINE_3)
     lcd.printString("Luftfeuchtigkeit:" + HumidityBME280 + "%", lcd.LINE_4)
     sleep(1)
+
+
+
+def rain():    
+    actualtime = datetime.datetime.now()
+    actualtime = int(actualtime.strftime('%H%M'))
+    if (actualtime == raintime):
+        lcd.printString("Bew\xE1sserungsvorgang", lcd.LINE_2)
+        my_pwm.ChangeDutyCycle(0)
+        print("Bewässungsvorgang")
+        requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
+        sleep(rainduration)
+        requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
+        sleep(60)
+
+
 
 def luefter(humidity):
     humidity=int(humidity)
@@ -62,7 +90,6 @@ def luefter(humidity):
         fanstatus = ("Off 0%")
         my_pwm.stop()
         GPIO.cleanup()
-        sntemp= False
 
     return fanstatus
 
