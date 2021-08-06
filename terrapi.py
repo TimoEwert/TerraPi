@@ -20,8 +20,8 @@ rainduration=config["Configuration"]["rainduration"]
 device=config["Configuration"]["device"]
 sea_level_pressure=config["Configuration"]["sea_level_pressure"]
 gpio_for_IRF520=int(config["Configuration"]["gpio_for_IRF520"])
-
-
+raintime=int(raintime)
+rainduration=int(rainduration)
 i2c = board.I2C()  # uses board.SCL and board.SDA
 bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c)
 bme280.sea_level_pressure = sea_level_pressure
@@ -40,7 +40,7 @@ my_pwm.start(0)
 ###LCD Display initialize
 def setup():
   lcd.initialize()
-  
+
 ###Mainloop
 def loop():
     DS18B20 = getTemp_DS18B20(device)
@@ -54,22 +54,24 @@ def loop():
     lcd.printString("Temperatur: " + TempBMe280 + chr(223) + "C", lcd.LINE_3)
     lcd.printString("Luftfeuchtigkeit:" + HumidityBME280 + "%", lcd.LINE_4)
     sleep(1)
-    
+
 ###Rain function for Rain at specific times config "raintime" for times to rain
-def rain():    
+def rain():
     actualtime = datetime.datetime.now()
     actualtime = int(actualtime.strftime('%H%M'))
-    if (actualtime == raintime):
-        lcd.printString("", lcd.LINE_1)
-        lcd.printString(" Bew\xE1sserungsvorgang",lcd.LINE_2)
-        lcd.printString("L\xF5fter l\xE1uft auf 100%", lcd.LINE_3)
-        lcd.printString(actualtime, lcd.LINE_4)
-        my_pwm.ChangeDutyCycle(0)
-        requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
-        sleep(rainduration)
-        requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
-        sleep(60)
-        
+    print(actualtime)
+    if(actualtime == raintime):
+      print("hallo")
+#      lcd.printString(actualtime,lcd.LINE_1)
+#      lcd.printString(" Bew\xE1sserungsvorgang",lcd.LINE_2)
+#      lcd.printString("L\xF5fter l\xE1uft auf 100%", lcd.LINE_3)
+#      lcd.printString(actualtime, lcd.LINE_4)
+      my_pwm.ChangeDutyCycle(0)
+      requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
+      sleep(rainduration)
+      requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
+      sleep(60)
+
 ###Fan temperature control with change dutycycle for specific temperatures
 def fan(temp_bme280):
     temp_bme280=int(temp_bme280)
