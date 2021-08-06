@@ -15,7 +15,7 @@ import datetime
 config = configparser.ConfigParser()
 config.read(".env")
 
-raintime=int(config["Configuration"]["raintime"])
+raintime=int(config["Configuration"]["raintime1"])
 ip_shelly1=config["Configuration"]["ip_shelly1"] ###Shelly for rain
 ip_shelly2=config["Configuration"]["ip_shelly2"] ###Shelly for main light
 ip_shelly3=config["Configuration"]["ip_shelly3"] ###Shelly for heating Spot
@@ -64,7 +64,7 @@ def loop():
 ###Lightning timer for shelly2 Main Light
 def mainlight_timer():
     actualtime = datetime.datetime.now()
-    actualtime = int(actualtime.strftime('%H%M')
+    actualtime = int(actualtime.strftime('%H%M'))
     if(actualtime == mainlight_on):
       requests.get("http://" + ip_shelly2 + "/relay/0?turn=on")
     elif(actualtime == mainlight_off):
@@ -73,7 +73,7 @@ def mainlight_timer():
 ###Lightning timer for shelly3 Heating Spot
 def heating_spot_timer():
     actualtime = datetime.datetime.now()
-    actualtime = int(actualtime.strftime('&H&M')
+    actualtime = int(actualtime.strftime('%H%M'))
     if(actualtime == heatlight_on):
       requests.get("http://" + ip_shelly3 + "/relay/0?turn=on")
     elif(actualtime == heatlight_off):
@@ -82,7 +82,7 @@ def heating_spot_timer():
 ###Rain function for Rain at specific times config "raintime" for times to rain
 def rain():
     actualtime = datetime.datetime.now()
-    actualtime = int(actualtime.strftime('%H%M')
+    actualtime = int(actualtime.strftime('%H%M'))
     print(actualtime)
     if(actualtime == raintime):
 #      lcd.clear()
