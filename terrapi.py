@@ -52,14 +52,13 @@ def setup():
 
 ###Mainloop
 def loop():
+  rain()
   mainlight_timer()
   heating_spot_timer()
   tempDS18B20=getTemp_DS18B20(device)
   HumidityBME280="%0.0f" % bme280.relative_humidity
   TempBME280="%0.0f" % bme280.temperature
-  print(TempBME280)
   fanstatus=fan(TempBME280)
-  rain()
   lcd.printString("W\xE1rme Spot: " + tempDS18B20 + chr(223) + "C", lcd.LINE_1)
   lcd.printString("Fanstatus: " + fanstatus,lcd.LINE_2)
   lcd.printString("Temperatur: " + TempBME280 + chr(223) + "C", lcd.LINE_3)
@@ -84,44 +83,42 @@ def heating_spot_timer():
   elif(actualtime == heatlight_off):
     requests.get("http://" + ip_shelly3 + "/relay/0?turn=off")
 
-###Rain function for Rain at specific times config "raintime" for times to rain
+###Rain function for Rain at specific times config "raintime" for times to rain and starts 2 min after ventilation
 def rain():
   actualtime = datetime.datetime.now()
   actualtime = int(actualtime.strftime('%H%M'))
   z=[raintime1,raintime2,raintime3]
   for i in range(0,3):
     if(z[i] == actualtime):
-      my_pwm.start(0)
       lcd.clear()
-      lcd.printString("Bew\xE1sserungsvorgang",lcd.LINE_2)
+      lcd.printString("    Regen",lcd.LINE_2)
+      lcd.printString("  gestartet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(0)
-      fanstatus = ("ON 0%")
-      print("an")
-#      requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
+      requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
       sleep(rainduration)
-      print("aus")
-#      requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
-#      sleep(40)
+      lcd.printString("    Regen",lcd.LINE_2)
+      lcd.printString("   beendet",lcd.LINE_3)
+      requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
+      sleep(120)
+      lcd.printString("  L\xF5ftung",lcd.LINE_2)
+      lcd.printString("   gestartet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(100)
-      fanstatus = ("ON 100%")
-      sleep(30)
+      sleep(60)
+      lcd.printString("  L\xF5ftung",lcd.LINE_2)
+      lcd.printString("   beendet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(0)
-    else:
-      fanstatus = ("Off 0%")
-      my_pwm.stop()
-      GPIO.cleanup()
-  return fanstatus
+      sleep(2)
 
 ###Fan temperature control with change dutycycle for specific temperatures
 def fan(TempBME280):
   TempBME280=int(TempBME280)
-  if(TempBME280 >= 23):
+  if(TempBME280 >= 30):
     my_pwm.ChangeDutyCycle(100)
     fanstatus = ("ON 100%")
-  elif(TempBME280 >= 24):
+  elif(TempBME280 >= 29):
     my_pwm.ChangeDutyCycle(75)
     fanstatus = ("ON 75%")
-  elif(TempBME280 >= 25):
+  elif(TempBME280 >= 28):
     my_pwm.ChangeDutyCycle(50)
     fanstatus = ("ON 50%")
   else:
