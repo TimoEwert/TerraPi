@@ -13,7 +13,7 @@ import datetime
 
 ###Edit config file (.env) to change parameters
 config = configparser.ConfigParser()
-config.read(".env")
+config.read("/home/pi/TerraPi/.env")
 
 raintime1=int(config["Configuration"]["raintime1"])
 raintime2=int(config["Configuration"]["raintime2"])
@@ -52,6 +52,7 @@ def setup():
 
 ###Mainloop
 def loop():
+  print("mainloop läuft")
   rain()
   mainlight_timer()
   heating_spot_timer()
@@ -90,22 +91,26 @@ def rain():
   z=[raintime1,raintime2,raintime3]
   for i in range(0,3):
     if(z[i] == actualtime):
+      print("beregnung läuft")
       lcd.clear()
       lcd.printString("    Regen",lcd.LINE_2)
       lcd.printString("  gestartet",lcd.LINE_3)
+      sleep(1)
       my_pwm.ChangeDutyCycle(0)
       requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
       sleep(rainduration)
-      lcd.printString("    Regen",lcd.LINE_2)
-      lcd.printString("   beendet",lcd.LINE_3)
+      lcd.printString("       Regen",lcd.LINE_2)
+      lcd.printString("      beendet",lcd.LINE_3)
       requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
       sleep(120)
-      lcd.printString("  L\xF5ftung",lcd.LINE_2)
-      lcd.printString("   gestartet",lcd.LINE_3)
+      lcd.printString("     L\xF5ftung",lcd.LINE_2)
+      lcd.printString("      gestartet",lcd.LINE_3)
+      sleep(1)
       my_pwm.ChangeDutyCycle(100)
-      sleep(60)
-      lcd.printString("  L\xF5ftung",lcd.LINE_2)
-      lcd.printString("   beendet",lcd.LINE_3)
+      sleep(240)
+      lcd.printString("     L\xF5ftung",lcd.LINE_2)
+      lcd.printString("      beendet",lcd.LINE_3)
+      sleep(1)
       my_pwm.ChangeDutyCycle(0)
       sleep(2)
 
@@ -123,6 +128,7 @@ def fan(TempBME280):
     fanstatus = ("ON 50%")
   else:
     fanstatus = ("Off 0%")
+    print("else fan func")
     my_pwm.stop()
     GPIO.cleanup()
   return fanstatus
