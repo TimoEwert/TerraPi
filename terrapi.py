@@ -10,6 +10,7 @@ from adafruit_bme280 import basic as adafruit_bme280
 import requests
 import configparser
 import datetime
+import json
 
 ###Edit config file (.env) to change parameters
 config = configparser.ConfigParser()
@@ -19,7 +20,8 @@ raintime1=int(config["Configuration"]["raintime1"])
 raintime2=int(config["Configuration"]["raintime2"])
 raintime3=int(config["Configuration"]["raintime3"])
 
-
+bot_token=config["Configuration"]["bot_token"] ###token for Telegram Bot
+bot_chatID=config["Configuration"]["bot_chatID"] ###ChatID for Telegram Bot
 ip_shelly1=config["Configuration"]["ip_shelly1"] ###Shelly for rain
 ip_shelly2=config["Configuration"]["ip_shelly2"] ###Shelly for main light
 ip_shelly3=config["Configuration"]["ip_shelly3"] ###Shelly for heating Spot
@@ -71,17 +73,20 @@ def mainlight_timer():
   actualtime = int(actualtime.strftime('%H%M'))
   if(actualtime == mainlight_on):
     requests.get("http://" + ip_shelly2 + "/relay/0?turn=on")
+    telegram("Arcardia LED an")
   elif(actualtime == mainlight_off):
     requests.get("http://" + ip_shelly2 + "/relay/0?turn=off")
-
+    telegram("Arcardia LED aus")
 ###Lightning timer for shelly3 Heating Spot
 def heating_spot_timer():
   actualtime = datetime.datetime.now()
   actualtime = int(actualtime.strftime('%H%M'))
   if(actualtime == heatlight_on):
     requests.get("http://" + ip_shelly3 + "/relay/0?turn=on")
+    telegram("Wärmespot an")
   elif(actualtime == heatlight_off):
     requests.get("http://" + ip_shelly3 + "/relay/0?turn=off")
+    telegram("Wärmespot aus")
 
 ###Rain function for Rain at specific times config "raintime" for times to rain and starts 2 min after ventilation
 def rain():
@@ -90,24 +95,27 @@ def rain():
   z=[raintime1,raintime2,raintime3]
   for i in range(0,3):
     if(z[i] == actualtime):
-      print("beregnung läuft")
       lcd.clear()
       lcd.printString("       Regen",lcd.LINE_2)
       lcd.printString("     gestartet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(0)
       requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
+      telegram("Regen gestartet")
       sleep(rainduration)
       lcd.printString("       Regen",lcd.LINE_2)
       lcd.printString("      beendet",lcd.LINE_3)
       requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
+      telegram("Regen beendet")
       sleep(120)
       lcd.printString("     L\xF5ftung",lcd.LINE_2)
       lcd.printString("      gestartet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(100)
+      telegram("Lüftung nach Regen an")
       sleep(240)
       lcd.printString("     L\xF5ftung",lcd.LINE_2)
       lcd.printString("      beendet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(0)
+      telegram("Lüftung nach Regen aus")
       sleep(2)
 
 ###Fan temperature control with change dutycycle for specific temperatures
@@ -135,6 +143,17 @@ def getTemp_DS18B20(ID):
   rawValue = rawData.split("\n")[1].split(" ")[9]
   temperature = int(float(rawValue[2:]) / 1000)
   return '%6.2f' % temperature
+
+###Telegram notification
+def telegram(msg):
+  telegram_msg=msg
+  send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + telegram_msg
+  response = requests.get(send_text)
+
+#  return response.json()
+
+
+
 #################################################################################################
 ##### MAIN ######################################################################################
 #################################################################################################
