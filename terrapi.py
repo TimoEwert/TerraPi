@@ -19,6 +19,13 @@ config.read("/home/pi/TerraPi/.env")
 raintime1=int(config["Configuration"]["raintime1"])
 raintime2=int(config["Configuration"]["raintime2"])
 raintime3=int(config["Configuration"]["raintime3"])
+raintime4=int(config["Configuration"]["raintime4"])
+raintime5=int(config["Configuration"]["raintime5"])
+raintime6=int(config["Configuration"]["raintime6"])
+raintime7=int(config["Configuration"]["raintime7"])
+raintime8=int(config["Configuration"]["raintime8"])
+raintime9=int(config["Configuration"]["raintime9"])
+raintime10=int(config["Configuration"]["raintime10"])
 
 bot_token=config["Configuration"]["bot_token"] ###token for Telegram Bot
 bot_chatID=config["Configuration"]["bot_chatID"] ###ChatID for Telegram Bot
@@ -62,9 +69,9 @@ def loop():
   TempBME280="%0.0f" % bme280.temperature
   fanstatus=fan(TempBME280)
   lcd.printString("W\xE1rme Spot: " + tempDS18B20 + chr(223) + "C", lcd.LINE_1)
-  lcd.printString("Fanstatus: " + fanstatus,lcd.LINE_2)
+  lcd.printString("L\xF5fter: " + fanstatus,lcd.LINE_2)
   lcd.printString("Temperatur: " + TempBME280 + chr(223) + "C", lcd.LINE_3)
-  lcd.printString("Luftfeuchtigkeit:" + HumidityBME280 + "%", lcd.LINE_4)
+  lcd.printString("Luftfeucht.:" + HumidityBME280 + "%", lcd.LINE_4)
   sleep(1)
 
 ###Lightning timer for shelly2 Main Light
@@ -74,26 +81,30 @@ def mainlight_timer():
   if(actualtime == mainlight_on):
     requests.get("http://" + ip_shelly2 + "/relay/0?turn=on")
     telegram("Arcardia LED an")
+    sleep(60)
   elif(actualtime == mainlight_off):
     requests.get("http://" + ip_shelly2 + "/relay/0?turn=off")
     telegram("Arcardia LED aus")
+    sleep(60)
 ###Lightning timer for shelly3 Heating Spot
 def heating_spot_timer():
   actualtime = datetime.datetime.now()
   actualtime = int(actualtime.strftime('%H%M'))
   if(actualtime == heatlight_on):
     requests.get("http://" + ip_shelly3 + "/relay/0?turn=on")
-    telegram("Wärmespot an")
+    telegram("Waermespot an")
+    sleep(60)
   elif(actualtime == heatlight_off):
     requests.get("http://" + ip_shelly3 + "/relay/0?turn=off")
-    telegram("Wärmespot aus")
+    telegram("Waermespot aus")
+    sleep(60)
 
 ###Rain function for Rain at specific times config "raintime" for times to rain and starts 2 min after ventilation
 def rain():
   actualtime = datetime.datetime.now()
   actualtime = int(actualtime.strftime('%H%M'))
-  z=[raintime1,raintime2,raintime3]
-  for i in range(0,3):
+  z=[raintime1,raintime2,raintime3,raintime4,raintime5,raintime6,raintime7,raintime8,raintime9,raintime10]
+  for i in range(0,11):
     if(z[i] == actualtime):
       lcd.clear()
       lcd.printString("       Regen",lcd.LINE_2)
@@ -106,16 +117,16 @@ def rain():
       lcd.printString("      beendet",lcd.LINE_3)
       requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
       telegram("Regen beendet")
-      sleep(120)
+      sleep(180)
       lcd.printString("     L\xF5ftung",lcd.LINE_2)
       lcd.printString("      gestartet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(100)
-      telegram("Lüftung nach Regen an")
-      sleep(240)
+      telegram("Lueftung nach Regen an")
+      sleep(300)
       lcd.printString("     L\xF5ftung",lcd.LINE_2)
       lcd.printString("      beendet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(0)
-      telegram("Lüftung nach Regen aus")
+      telegram("Lueftung nach Regen aus")
       sleep(2)
 
 ###Fan temperature control with change dutycycle for specific temperatures
