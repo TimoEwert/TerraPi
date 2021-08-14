@@ -104,7 +104,7 @@ def rain():
   actualtime = datetime.datetime.now()
   actualtime = int(actualtime.strftime('%H%M'))
   z=[raintime1,raintime2,raintime3,raintime4,raintime5,raintime6,raintime7,raintime8,raintime9,raintime10]
-  for i in range(0,11):
+  for i in range(10):
     if(z[i] == actualtime):
       lcd.clear()
       lcd.printString("       Regen",lcd.LINE_2)
