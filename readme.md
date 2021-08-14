@@ -1,7 +1,13 @@
 # Terrarium Control
 
 ## Features
-This short script reads temperatures and humidity in a terrarium, sets a fan to specified speeds and shows the values on a LCD Display.
+This short script reads temperatures and humidity in a terrarium, sets a fan to certain speeds based on the temperature and shows the values ​​on an LCD display.
+At the moment 10 rainy seasons can be set in the configuration.
+then, after each rain, ventilation is carried out for period x in order to dry the windows. There is also a telegram notification for the steps
+- Mainlight on / off
+- Heat Spot on / off
+- Rain on / off
+- Ventilation after rain on / off
 
 ## Used Hardware
 - [Raspberry Pi 3B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)
@@ -10,8 +16,10 @@ This short script reads temperatures and humidity in a terrarium, sets a fan to 
 - [20x4 I2C LCD Display](https://www.amazon.de/gp/product/B0859YY2NZ)
 - [Bequiet Pc fan](https://www.amazon.de/gp/product/B00IOIJ4AC)
 - [Adafruit BME280](https://www.reichelt.de/de/de/entwicklerboards-temperatur-feuchtigkeits-und-drucksensor--debo-sens-thd-p235476.html)
+- [Shelly 1 WiFi Switch](https://www.amazon.de/Shelly-Schalter-Wireless-Hausautomation-Anwendung/dp/B07G33LNDY/)
 
 ## Installation
+
 ### Install python3 and necessary python3 modules:
 ```
 sudo apt-get update
