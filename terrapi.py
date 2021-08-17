@@ -29,24 +29,28 @@ raintime10=int(config["Configuration"]["raintime10"])
 
 bot_token=config["Configuration"]["bot_token"] ###token for Telegram Bot
 bot_chatID=config["Configuration"]["bot_chatID"] ###ChatID for Telegram Bot
+
 ip_shelly1=config["Configuration"]["ip_shelly1"] ###Shelly for rain
 ip_shelly2=config["Configuration"]["ip_shelly2"] ###Shelly for main light
 ip_shelly3=config["Configuration"]["ip_shelly3"] ###Shelly for heating Spot
+
 rainduration=int(config["Configuration"]["rainduration"])
 device=config["Configuration"]["device"]
 sea_level_pressure=config["Configuration"]["sea_level_pressure"]
 gpio_for_IRF520=int(config["Configuration"]["gpio_for_IRF520"])
+
 mainlight_on=int(config["Configuration"]["mainlight_on"])
 mainlight_off=int(config["Configuration"]["mainlight_off"])
+
 heatlight_on=int(config["Configuration"]["heatlight_on"])
 heatlight_off=int(config["Configuration"]["heatlight_off"])
+
 i2c = board.I2C()  # uses board.SCL and board.SDA
 bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c)
 bme280.sea_level_pressure = sea_level_pressure
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-
 GPIO.setup(gpio_for_IRF520,GPIO.OUT)
 my_pwm=GPIO.PWM(gpio_for_IRF520,100)
 my_pwm.start(0)
@@ -119,12 +123,12 @@ def rain():
       telegram("Regen beendet")
       sleep(180)
       lcd.printString("     L\xF5ftung",lcd.LINE_2)
-      lcd.printString("      gestartet",lcd.LINE_3)
+      lcd.printString("       gestartet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(100)
       telegram("Lueftung nach Regen an")
-      sleep(300)
+      sleep(180)
       lcd.printString("     L\xF5ftung",lcd.LINE_2)
-      lcd.printString("      beendet",lcd.LINE_3)
+      lcd.printString("        beendet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(0)
       telegram("Lueftung nach Regen aus")
       sleep(2)
@@ -160,10 +164,6 @@ def telegram(msg):
   telegram_msg=msg
   send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + telegram_msg
   response = requests.get(send_text)
-
-#  return response.json()
-
-
 
 #################################################################################################
 ##### MAIN ######################################################################################
