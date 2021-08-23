@@ -73,7 +73,10 @@ def loop():
   HumidityBME280="%0.0f" % bme280.relative_humidity
   TempBME280="%0.0f" % bme280.temperature
   fanstatus=fan(TempBME280)
-  lcd.printString("W\xE1rme Spot: " + tempDS18B20 + chr(223) + "C", lcd.LINE_1)
+  try:
+    lcd.printString("W\xE1rme Spot: " + tempDS18B20 + chr(223) + "C", lcd.LINE_1)
+  except:
+    print("lcd error")
   lcd.printString("L\xF5fter: " + fanstatus,lcd.LINE_2)
   lcd.printString("Temperatur: " + TempBME280 + chr(223) + "C", lcd.LINE_3)
   lcd.printString("Luftfeucht.:" + HumidityBME280 + "%", lcd.LINE_4)
@@ -84,38 +87,55 @@ def mainlight_timer():
   actualtime = datetime.datetime.now()
   actualtime = int(actualtime.strftime('%H%M'))
   if(actualtime == mainlight_on):
-    r=requests.get("http://" + ip_shelly2 + "/relay/0?turn=on")
-    if(r.status_code == 200):
-      telegram("Arcardia LED an")
-    else:
+    try:
+      r=requests.get("http://" + ip_shelly2 + "/relay/0?turn=on")
+      if(r.status_code == 200):
+        telegram("Arcardia LED an")
+      else:
+        print("Arcardia LED wurde nicht angeschaltet")
+      sleep(60)
+    except:
       telegram("Arcardia LED wurde nicht angeschaltet")
-    sleep(60)
-  elif(actualtime == mainlight_off):
-    r=requests.get("http://" + ip_shelly2 + "/relay/0?turn=off")
-    if(r.status_code == 200):
-      telegram("Arcardia LED aus")
-    else:
+      sleep(60)
+
+  elif(actualtime == heatlight_off):
+    try:
+      r=requests.get("http://" + ip_shelly2 + "/relay/0?turn=off")
+      if(r.status_code == 200):
+        telegram("Arcardia LED aus")
+      else:
+        print("Arcardia LED wurde nicht ausgeschaltet") 
+      sleep(60)
+    except:
       telegram("Arcardia LED wurde nicht ausgeschaltet")
-    sleep(60)
+      sleep(60)
 ###Lightning timer for shelly3 Heating Spot
 def heating_spot_timer():
   actualtime = datetime.datetime.now()
   actualtime = int(actualtime.strftime('%H%M'))
   if(actualtime == heatlight_on):
-    r=requests.get("http://" + ip_shelly3 + "/relay/0?turn=on")
-    if(r.status_code == 200):
-      telegram("Waermespot an")
-    else:
+    try:
+      r=requests.get("http://" + ip_shelly3 + "/relay/0?turn=on")
+      if(r.status_code == 200):
+        telegram("Waermespot an")
+      else:
+        print("Waermespot wurde nicht angeschaltet")
+      sleep(60)
+    except:
       telegram("Waermespot wurde nicht angeschaltet")
-    sleep(60)
-  elif(actualtime == heatlight_off):
-    r=requests.get("http://" + ip_shelly3 + "/relay/0?turn=off")
-    if(r.status_code == 200):
-      telegram("Waermespot aus")
-    else:
-      telegram("Waermespot wurde nicht ausgeschaltet")
-    sleep(60)
+      sleep(60)
 
+  elif(actualtime == heatlight_off):
+    try:
+      r=requests.get("http://" + ip_shelly3 + "/relay/0?turn=off")
+      if(r.status_code == 200):
+        telegram("Waermespot aus")
+      else:
+        print("Waermespot wurde nicht ausgeschaltet") 
+      sleep(60)
+    except:
+      telegram("Waermespot wurde nicht ausgeschaltet")
+      sleep(60)
 ###Rain function for Rain at specific times config "raintime" for times to rain and starts 2 min after ventilation
 def rain():
   actualtime = datetime.datetime.now()
@@ -127,18 +147,24 @@ def rain():
       lcd.printString("       Regen",lcd.LINE_2)
       lcd.printString("     gestartet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(0)
-      r=requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
-      if(r.status_code == 200):
-        telegram("Regen gestartet")
-      else:
+      try:
+        r=requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
+        if(r.status_code == 200):
+          telegram("Regen gestartet")
+        else:
+          print("Regen wurde nicht gestartet")
+      except:
         telegram("Regen wurde nicht gestartet")
       sleep(rainduration)
       lcd.printString("       Regen",lcd.LINE_2)
       lcd.printString("      beendet",lcd.LINE_3)
-      r=requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
-      if(r.status_code == 200):
-        telegram("Regen beendet")
-      else:
+      try:
+        r=requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
+        if(r.status_code == 200):
+          telegram("Regen beendet")
+        else:
+          print("Regen wurde nicht beendet")
+      except:
         telegram("Regen wurde nicht beendet")
       sleep(180)
       lcd.printString("     L\xF5ftung",lcd.LINE_2)
@@ -179,7 +205,10 @@ def getTemp_DS18B20(ID):
     temperature = int(float(rawValue[2:]) / 1000)
     return '%6.2f' % temperature
   except:
-    telegram(now.strftime("%H:%M:%S") + "Fehler in der Erfassung des Wertes vom DS18B20")
+    actualtime = datetime.datetime.now()
+    actualtime = actualtime.strftime('%H:%M:%S')
+    telegram(actualtime + "Fehler in der Erfassung des Wertes vom DS18B20")
+    sleep(5)
     
 ###Telegram notification
 def telegram(msg):
