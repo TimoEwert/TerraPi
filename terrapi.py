@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: iso-8859-15 -*-
+# -*- coding: utf-8 -*-
 import lcd
 import os, sys
 from time import sleep
@@ -11,7 +11,6 @@ import requests
 import configparser
 import datetime
 import json
-#from datetime import datetime
 
 ###Edit config file (.env) to change parameters
 config = configparser.ConfigParser()
@@ -98,7 +97,7 @@ def mainlight_timer():
       telegram("Arcardia LED wurde nicht angeschaltet")
       sleep(60)
 
-  elif(actualtime == heatlight_off):
+  elif(actualtime == mainlight_off):
     try:
       r=requests.get("http://" + ip_shelly2 + "/relay/0?turn=off")
       if(r.status_code == 200):
@@ -119,22 +118,22 @@ def heating_spot_timer():
       if(r.status_code == 200):
         telegram("Waermespot an")
       else:
-        print("Waermespot wurde nicht angeschaltet")
+        print("Wärmespot wurde nicht angeschaltet")
       sleep(60)
     except:
-      telegram("Waermespot wurde nicht angeschaltet")
+      telegram("Wärmespot wurde nicht angeschaltet")
       sleep(60)
 
   elif(actualtime == heatlight_off):
     try:
       r=requests.get("http://" + ip_shelly3 + "/relay/0?turn=off")
       if(r.status_code == 200):
-        telegram("Waermespot aus")
+        telegram("Wärmespot aus")
       else:
-        print("Waermespot wurde nicht ausgeschaltet") 
+        print("Wärmespot wurde nicht ausgeschaltet") 
       sleep(60)
     except:
-      telegram("Waermespot wurde nicht ausgeschaltet")
+      telegram("Wärmespot wurde nicht ausgeschaltet")
       sleep(60)
 ###Rain function for Rain at specific times config "raintime" for times to rain and starts 2 min after ventilation
 def rain():
@@ -167,15 +166,15 @@ def rain():
       except:
         telegram("Regen wurde nicht beendet")
       sleep(180)
-      lcd.printString("     L\xF5ftung",lcd.LINE_2)
+      lcd.printString("    L\xF5ftung",lcd.LINE_2)
       lcd.printString("       gestartet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(100)
-      telegram("Lueftung nach Regen an")
+      telegram("Lüftung nach Regen an")
       sleep(180)
       lcd.printString("     L\xF5ftung",lcd.LINE_2)
       lcd.printString("        beendet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(0)
-      telegram("Lueftung nach Regen aus")
+      telegram("Lüftung nach Regen aus")
       sleep(2)
 
 ###Fan temperature control with change dutycycle for specific temperatures
@@ -207,7 +206,7 @@ def getTemp_DS18B20(ID):
   except:
     actualtime = datetime.datetime.now()
     actualtime = actualtime.strftime('%H:%M:%S')
-    telegram(actualtime + "Fehler in der Erfassung des Wertes vom DS18B20")
+    telegram(actualtime + " Fehler in der Erfassung des Wertes vom DS18B20")
     sleep(5)
     
 ###Telegram notification
