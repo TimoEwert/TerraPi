@@ -237,7 +237,7 @@ def temps_humidity():
       tempDS18B20=getTemp_DS18B20(device)
       TempBME280="%0.0f" % bme280.temperature
       HumidityBME280="%0.0f" % bme280.relative_humidity
-      telegram("Wärmespot: " + tempDS18B20 + "°C \n" + "TempBME: " +  TempBME280 + "°C \n" + "Luftfeuchtigkeit: " + HumidityBME280 + "%")
+      telegram("Wärmespot: " + tempDS18B20 + "°C \n" + "Temperatur: " +  TempBME280 + "°C \n" + "Luftfeuchtigkeit: " + HumidityBME280 + "%")
       sleep(60)
 #################################################################################################
 ##### MAIN ######################################################################################
