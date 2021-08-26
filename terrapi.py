@@ -27,6 +27,17 @@ raintime8=int(config["Configuration"]["raintime8"])
 raintime9=int(config["Configuration"]["raintime9"])
 raintime10=int(config["Configuration"]["raintime10"])
 
+status1=int(config["Configuration"]["status1"])
+status2=int(config["Configuration"]["status2"])
+status3=int(config["Configuration"]["status3"])
+status4=int(config["Configuration"]["status4"])
+status5=int(config["Configuration"]["status5"])
+status6=int(config["Configuration"]["status6"])
+status7=int(config["Configuration"]["status7"])
+status8=int(config["Configuration"]["status8"])
+status9=int(config["Configuration"]["status9"])
+status10=int(config["Configuration"]["status10"])
+
 bot_token=config["Configuration"]["bot_token"] ###token for Telegram Bot
 bot_chatID=config["Configuration"]["bot_chatID"] ###ChatID for Telegram Bot
 
@@ -66,6 +77,7 @@ def setup():
 ###Mainloop
 def loop():
   rain()
+  temps_humidity()
   mainlight_timer()
   heating_spot_timer()
   tempDS18B20=getTemp_DS18B20(device)
@@ -116,7 +128,7 @@ def heating_spot_timer():
     try:
       r=requests.get("http://" + ip_shelly3 + "/relay/0?turn=on")
       if(r.status_code == 200):
-        telegram("Waermespot an")
+        telegram("Wärmespot an")
       else:
         print("Wärmespot wurde nicht angeschaltet")
       sleep(60)
@@ -139,9 +151,9 @@ def heating_spot_timer():
 def rain():
   actualtime = datetime.datetime.now()
   actualtime = int(actualtime.strftime('%H%M'))
-  z=[raintime1,raintime2,raintime3,raintime4,raintime5,raintime6,raintime7,raintime8,raintime9,raintime10]
+  raintimes=[raintime1,raintime2,raintime3,raintime4,raintime5,raintime6,raintime7,raintime8,raintime9,raintime10]
   for i in range(10):
-    if(z[i] == actualtime):
+    if(raintimes[i] == actualtime):
       lcd.clear()
       lcd.printString("       Regen",lcd.LINE_2)
       lcd.printString("     gestartet",lcd.LINE_3)
@@ -215,6 +227,18 @@ def telegram(msg):
   send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + telegram_msg
   response = requests.get(send_text)
 
+###sends temps, humidiy and fan status to telegram
+def temps_humidity():
+  actualtime = datetime.datetime.now()
+  actualtime = int(actualtime.strftime('%H%M'))
+  status=[status1,status2,status3,status4,status5,status6,status7,status8,status9,status10]
+  for i in range(10):
+    if(status[i] == actualtime):
+      tempDS18B20=getTemp_DS18B20(device)
+      TempBME280="%0.0f" % bme280.temperature
+      HumidityBME280="%0.0f" % bme280.relative_humidity
+      telegram("Wärmespot: " + tempDS18B20 + "°C \n" + "TempBME: " +  TempBME280 + "°C \n" + "Luftfeuchtigkeit: " + HumidityBME280 + "%")
+      sleep(60)
 #################################################################################################
 ##### MAIN ######################################################################################
 #################################################################################################
