@@ -6,7 +6,7 @@ import configparser
 
 ###Edit config file (.env) to change parameters
 config = configparser.ConfigParser()
-config.read("/home/pi/TerraPi/.env")
+config.read("/home/pi/TerraPi/.env2")
 
 bot_token=config["Configuration"]["bot_token"] ###token for Telegram Bot
 bot = telebot.TeleBot(bot_token)
