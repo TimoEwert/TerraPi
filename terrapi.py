@@ -40,13 +40,12 @@ status10=int(config["Configuration"]["status10"])
 
 bot_token=config["Configuration"]["bot_token"] ###token for Telegram Bot
 bot_chatID=config["Configuration"]["bot_chatID"] ###ChatID for Telegram Bot
-
 ip_shelly1=config["Configuration"]["ip_shelly1"] ###Shelly for rain
 ip_shelly2=config["Configuration"]["ip_shelly2"] ###Shelly for main light
 ip_shelly3=config["Configuration"]["ip_shelly3"] ###Shelly for heating Spot
 
-ventilation_duration=int(config["Configuration"]["ventilation_duration"]) ###time for ventilation duration
-time_after_rain=int(config["Configuration"]["time_after_rain"]) ###time for delay after rain
+#ventilation_duration=int(config["Configuration"]["ventilation_duration"]) ###time for ventilation duration
+#time_after_rain=int(config["Configuration"]["time_after_rain"]) ###time for delay after rain
 
 rainduration=int(config["Configuration"]["rainduration"])
 device=config["Configuration"]["device"]
@@ -72,9 +71,8 @@ my_pwm.start(0)
 count_status=0
 count_mainlight=0
 count_heatingspot=0
-counter_rain=0
-counter_after_rain=0
-counter_ventilation_duration=0
+counter=0
+
 #################################################################################################
 ##### FUNCTIONS #################################################################################
 #################################################################################################
@@ -86,8 +84,6 @@ def setup():
 ###Mainloop
 def loop():
   rain()
-  time_after_rainy()
-  ventilation()
   temps_humidity()
   mainlight_timer()
   heating_spot_timer()
@@ -103,6 +99,43 @@ def loop():
   lcd.printString("Temperatur: " + TempBME280 + chr(223) + "C", lcd.LINE_3)
   lcd.printString("Luftfeucht.:" + HumidityBME280 + "%", lcd.LINE_4)
   sleep(1)
+  print("funzt")
+  try:
+    writestatusfile()
+  except:
+    telegram(actualtime + " Fehler im Status schreiben")  
+  oldvalue="666"
+  while readmanualcontrol()!= "666":
+  
+    drehzahl=readmanualcontrol() 
+    drehzahl=int(drehzahl)
+    if drehzahl!=oldvalue:
+        print("ich setze die Drehzahl auf:" + str(drehzahl))
+        my_pwm.ChangeDutyCycle(drehzahl)
+        lcd.printString("Man. L\xF5fter: " + str(drehzahl) +"%",lcd.LINE_2)
+        oldvalue=drehzahl
+        
+    sleep(1)
+
+def writestatusfile():
+    tempDS18B20=getTemp_DS18B20(device)
+    TempBME280="%0.0f" % bme280.temperature
+    HumidityBME280="%0.0f" % bme280.relative_humidity
+    actualtime = datetime.datetime.now()
+    actualtime = actualtime.strftime('%H:%M:%S')
+    status=actualtime + "\nWärmespot: " + tempDS18B20 + "°C \n" + "Temperatur: " +  TempBME280 + "°C \n" + "Luftfeuchtigkeit: " + HumidityBME280 + "%"
+    file = open("/home/pi/TerraPi/status.tmp","w")
+    file.write(status)
+    file.close()
+
+def readmanualcontrol():
+    file = open("/home/pi/TerraPi/dutycycle.tmp", "r")
+    manualvalue=file.read()
+    file.close()
+    if manualvalue=="automatik":
+        manualvalue = "666"
+    return manualvalue
+
 
 ###Lightning timer for shelly2 Main Light
 def mainlight_timer():
@@ -114,21 +147,29 @@ def mainlight_timer():
       try:
         r=requests.get("http://" + ip_shelly2 + "/relay/0?turn=on")
         if(r.status_code == 200):
+          actualtime = datetime.datetime.now()
+          actualtime = actualtime.strftime('%H:%M:%S')
           telegram(actualtime + "Arcardia LED an")
         else:
           print("Arcardia LED wurde nicht angeschaltet")
         count_mainlight+=1
       except:
+        actualtime = datetime.datetime.now()
+        actualtime = actualtime.strftime('%H:%M:%S')
         telegram(actualtime + "Arcardia LED wurde nicht angeschaltet")
     elif(actualtime == mainlight_off and count_mainlight == 0):
       try:
         r=requests.get("http://" + ip_shelly2 + "/relay/0?turn=off")
         if(r.status_code == 200):
+          actualtime = datetime.datetime.now()
+          actualtime = actualtime.strftime('%H:%M:%S')
           telegram(actualtime + "Arcardia LED aus")
         else:
           print("Arcardia LED wurde nicht ausgeschaltet") 
         count_mainlight+=1
       except:
+        actualtime = datetime.datetime.now()
+        actualtime = actualtime.strftime('%H:%M:%S')
         telegram(actualtime + "Arcardia LED wurde nicht ausgeschaltet")
   elif(count_mainlight == 60):
     count_mainlight = 0
@@ -145,21 +186,29 @@ def heating_spot_timer():
       try:
         r=requests.get("http://" + ip_shelly3 + "/relay/0?turn=on")
         if(r.status_code == 200):
+          actualtime = datetime.datetime.now()
+          actualtime = actualtime.strftime('%H:%M:%S')
           telegram(actualtime + "Wärmespot an")
         else:
           print("Wärmespot wurde nicht angeschaltet")
         count_heatingspot+=1
       except:
+        actualtime = datetime.datetime.now()
+        actualtime = actualtime.strftime('%H:%M:%S')
         telegram(actualtime + "Wärmespot wurde nicht angeschaltet")
     elif(actualtime == heatlight_off and count_heatingspot == 0):
       try:
         r=requests.get("http://" + ip_shelly3 + "/relay/0?turn=off")
         if(r.status_code == 200):
+          actualtime = datetime.datetime.now()
+          actualtime = actualtime.strftime('%H:%M:%S')
           telegram(actualtime + "Wärmespot aus")
         else:
           print("Wärmespot wurde nicht ausgeschaltet") 
         count_heatingspot+=1
       except:
+        actualtime = datetime.datetime.now()
+        actualtime = actualtime.strftime('%H:%M:%S')
         telegram(actualtime + "Wärmespot wurde nicht ausgeschaltet")
   elif(count_heatingspot == 60):
     count_heatingspot = 0
@@ -168,89 +217,56 @@ def heating_spot_timer():
 
 ###Rain function for Rain at specific times config "raintime" for times to rain and starts 2 min after ventilation
 def rain():
-  global counter_rain
-  global counter_after_rain
-  global counter_ventilation_duration
-  global time_after_rain
   actualtime = datetime.datetime.now()
   actualtime = int(actualtime.strftime('%H%M'))
   raintimes=[raintime1,raintime2,raintime3,raintime4,raintime5,raintime6,raintime7,raintime8,raintime9,raintime10]
-  if(counter_rain == 0):
-    for i in range(10):
-      if(raintimes[i] == actualtime):
-        lcd.clear()
-        lcd.printString("       Regen",lcd.LINE_2)
-        lcd.printString("     gestartet",lcd.LINE_3)
-        my_pwm.ChangeDutyCycle(0)
-        try:
+  for i in range(10):
+    if(raintimes[i] == actualtime):
+      lcd.clear()
+      lcd.printString("       Regen",lcd.LINE_2)
+      lcd.printString("     gestartet",lcd.LINE_3)
+      my_pwm.ChangeDutyCycle(0)
+      try:
+        r=requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
+        if(r.status_code == 200):
           actualtime = datetime.datetime.now()
           actualtime = actualtime.strftime('%H:%M:%S')
-          r=requests.get("http://" + ip_shelly1 + "/relay/0?turn=on")
-          if(r.status_code == 200):
-            telegram(actualtime + "Regen gestartet")
-            counter_rain+=1
-          else:
-            print(actualtime + "Regen wurde nicht gestartet")
-        except:
-          telegram(actualtime + "Regen wurde nicht gestartet")
-  elif(counter_rain == rainduration):
-    lcd.printString("       Regen",lcd.LINE_2)
-    lcd.printString("      beendet",lcd.LINE_3)
-    try:
+          telegram(actualtime + " Regen gestartet")
+        else:
+          print("Regen wurde nicht gestartet")
+      except:
+        actualtime = datetime.datetime.now()
+        actualtime = actualtime.strftime('%H:%M:%S')
+        telegram(actualtime + "Regen wurde nicht gestartet")
+      sleep(rainduration)
+      lcd.printString("       Regen",lcd.LINE_2)
+      lcd.printString("      beendet",lcd.LINE_3)
+      try:
+        r=requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
+        if(r.status_code == 200):
+          actualtime = datetime.datetime.now()
+          actualtime = actualtime.strftime('%H:%M:%S')
+          telegram(actualtime + " Regen beendet")
+        else:
+          print("Regen wurde nicht beendet")
+      except:
+        telegram("Regen wurde nicht beendet")
+      sleep(180)
+      lcd.printString("    L\xF5ftung",lcd.LINE_2)
+      lcd.printString("       gestartet",lcd.LINE_3)
+      my_pwm.ChangeDutyCycle(100)
       actualtime = datetime.datetime.now()
       actualtime = actualtime.strftime('%H:%M:%S')
-      print("hört auf zu regnen")
-      r=requests.get("http://" + ip_shelly1 + "/relay/0?turn=off")
-      if(r.status_code == 200):
-        telegram(actualtime + "Regen beendet")
-        counter_rain=(rainduration + 1)
-      else:
-        print(actualtime + "Regen wurde nicht beendet")
-    except:
-      telegram(actualtime + "Regen wurde nicht beendet")
-  elif(counter_rain == 60):
-    counter_rain=0
-    counter_after_rain=1    
-  elif(counter_rain >= 1):
-    counter_rain+=1
-    
-###Set delay for ventilation after Rain in config 
-def time_after_rainy():
-  global counter_ventilation_duration
-  global time_after_rain
-  global counter_after_rain
-  if(counter_after_rain == time_after_rain):
-    counter_ventilation_duration=1
-    counter_after_rain=0
-    print("hallo")
-  elif(counter_after_rain >= 1):
-    counter_after_rain+=1
-    
-###Ventilation controls set duration in config   
-def ventilation():
-  global counter_ventilation_duration
-  global ventilation_duration
-  if(counter_ventilation_duration == 1):
-    actualtime = datetime.datetime.now()
-    actualtime = actualtime.strftime('%H:%M:%S')
-    print("beginnt lüftung")
-    lcd.printString("    L\xF5ftung",lcd.LINE_2)
-    lcd.printString("       gestartet",lcd.LINE_3)
-    my_pwm.ChangeDutyCycle(100)
-    telegram(actualtime + "Lüftung nach Regen an")
-    counter_ventilation_duration+=1    
-  elif(counter_ventilation_duration == ventilation_duration):
-    actualtime = datetime.datetime.now()
-    actualtime = actualtime.strftime('%H:%M:%S')
-    print("beendet lüftung")
-    lcd.printString("     L\xF5ftung",lcd.LINE_2)
-    lcd.printString("        beendet",lcd.LINE_3)
-    my_pwm.ChangeDutyCycle(0)
-    telegram(actualtime + "Lüftung nach Regen aus")
-    counter_ventilation_duration=0 
-  elif(counter_ventilation_duration >= 1):
-    counter_ventilation_duration+=1
-    
+      telegram(actualtime + " Lüftung nach Regen an")
+      sleep(180)
+      lcd.printString("     L\xF5ftung",lcd.LINE_2)
+      lcd.printString("        beendet",lcd.LINE_3)
+      my_pwm.ChangeDutyCycle(0)
+      actualtime = datetime.datetime.now()
+      actualtime = actualtime.strftime('%H:%M:%S')
+      telegram(actualtime + " Lüftung nach Regen aus")
+
+
 ###Fan temperature control with change dutycycle for specific temperatures
 def fan(TempBME280):
   TempBME280=int(TempBME280)
@@ -310,7 +326,10 @@ def temps_humidity():
         count_status = 0
   elif(count_status >= 1):
         count_status+= 1      
-      
+        
+
+
+  
 #################################################################################################
 ##### MAIN ######################################################################################
 #################################################################################################
