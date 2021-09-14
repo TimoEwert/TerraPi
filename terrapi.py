@@ -94,7 +94,7 @@ def loop():
   try:
     lcd.printString("W\xE1rme Spot: " + tempDS18B20 + chr(223) + "C", lcd.LINE_1)
   except:
-    print("lcd error")
+    pass
   lcd.printString("L\xF5fter: " + fanstatus,lcd.LINE_2)
   lcd.printString("Temperatur: " + TempBME280 + chr(223) + "C", lcd.LINE_3)
   lcd.printString("Luftfeucht.:" + HumidityBME280 + "%", lcd.LINE_4)
@@ -103,10 +103,9 @@ def loop():
   try:
     writestatusfile()
   except:
-    telegram(actualtime + " Fehler im Status schreiben")  
+    pass  
   oldvalue="666"
   while readmanualcontrol()!= "666":
-  
     drehzahl=readmanualcontrol() 
     drehzahl=int(drehzahl)
     if drehzahl!=oldvalue:
@@ -154,9 +153,7 @@ def mainlight_timer():
           print("Arcardia LED wurde nicht angeschaltet")
         count_mainlight+=1
       except:
-        actualtime = datetime.datetime.now()
-        actualtime = actualtime.strftime('%H:%M:%S')
-        telegram(actualtime + "Arcardia LED wurde nicht angeschaltet")
+        pass
     elif(actualtime == mainlight_off and count_mainlight == 0):
       try:
         r=requests.get("http://" + ip_shelly2 + "/relay/0?turn=off")
@@ -168,9 +165,7 @@ def mainlight_timer():
           print("Arcardia LED wurde nicht ausgeschaltet") 
         count_mainlight+=1
       except:
-        actualtime = datetime.datetime.now()
-        actualtime = actualtime.strftime('%H:%M:%S')
-        telegram(actualtime + "Arcardia LED wurde nicht ausgeschaltet")
+        pass
   elif(count_mainlight == 60):
     count_mainlight = 0
   elif(count_mainlight >= 1):
@@ -193,9 +188,7 @@ def heating_spot_timer():
           print("Wärmespot wurde nicht angeschaltet")
         count_heatingspot+=1
       except:
-        actualtime = datetime.datetime.now()
-        actualtime = actualtime.strftime('%H:%M:%S')
-        telegram(actualtime + "Wärmespot wurde nicht angeschaltet")
+        pass
     elif(actualtime == heatlight_off and count_heatingspot == 0):
       try:
         r=requests.get("http://" + ip_shelly3 + "/relay/0?turn=off")
@@ -207,9 +200,7 @@ def heating_spot_timer():
           print("Wärmespot wurde nicht ausgeschaltet") 
         count_heatingspot+=1
       except:
-        actualtime = datetime.datetime.now()
-        actualtime = actualtime.strftime('%H:%M:%S')
-        telegram(actualtime + "Wärmespot wurde nicht ausgeschaltet")
+        pass
   elif(count_heatingspot == 60):
     count_heatingspot = 0
   elif(count_heatingspot >= 1):
@@ -235,9 +226,7 @@ def rain():
         else:
           print("Regen wurde nicht gestartet")
       except:
-        actualtime = datetime.datetime.now()
-        actualtime = actualtime.strftime('%H:%M:%S')
-        telegram(actualtime + "Regen wurde nicht gestartet")
+        pass
       sleep(rainduration)
       lcd.printString("       Regen",lcd.LINE_2)
       lcd.printString("      beendet",lcd.LINE_3)
@@ -250,7 +239,7 @@ def rain():
         else:
           print("Regen wurde nicht beendet")
       except:
-        telegram("Regen wurde nicht beendet")
+        pass
       sleep(180)
       lcd.printString("    L\xF5ftung",lcd.LINE_2)
       lcd.printString("       gestartet",lcd.LINE_3)
@@ -294,10 +283,8 @@ def getTemp_DS18B20(ID):
     temperature = int(float(rawValue[2:]) / 1000)
     return '%6.2f' % temperature
   except:
-    actualtime = datetime.datetime.now()
-    actualtime = actualtime.strftime('%H:%M:%S')
-    telegram(actualtime + " Fehler in der Erfassung des Wertes vom DS18B20")
-    sleep(5)
+    pass
+
     
 ###Telegram notification
 def telegram(msg):
@@ -308,7 +295,6 @@ def telegram(msg):
 ###sends temps, humidiy and fan status to telegram
 def temps_humidity():
   global count_status
-#  print("Status Counter: " + str(count_status))
   actualtime = datetime.datetime.now()
   actualtime = int(actualtime.strftime('%H%M'))
   status=[status1,status2,status3,status4,status5,status6,status7,status8,status9,status10]
@@ -326,10 +312,7 @@ def temps_humidity():
         count_status = 0
   elif(count_status >= 1):
         count_status+= 1      
-        
 
-
-  
 #################################################################################################
 ##### MAIN ######################################################################################
 #################################################################################################

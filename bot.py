@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
 import telebot
 import configparser
+
 
 ###Edit config file (.env) to change parameters
 config = configparser.ConfigParser()
@@ -10,19 +12,29 @@ config.read("/home/pi/TerraPi/.env2")
 
 bot_token=config["Configuration"]["bot_token"] ###token for Telegram Bot
 bot = telebot.TeleBot(bot_token)
-
 @bot.message_handler(commands=['start'])
 def start_message(message):
     keyboard = telebot.types.ReplyKeyboardMarkup(True)
     keyboard.row('0%', '25%', '50%', '75%', '100%')
     keyboard.row('Automatik')
     keyboard.row('Status')
+    keyboard.row('Reboot') ###, 'terrapi', 'bot')
+    
     bot.send_message(message.chat.id, 'Lüftersteuerung', reply_markup=keyboard)
 
 @bot.message_handler(content_types=['text'])
 def send_text(message):
     drehzahl = message.text.lower()
     try:
+#        if drehzahl=="terrapi":
+#            terrapi = os.system("ps aux | grep -i 'terrapi.py'")
+#            bot.send_message(message.chat.id, 'Ausgabe ' + terrapi)            
+#        if drehzahl=="bot":
+#            bot = os.system("ps aux | grep -i bot.py")
+#            bot.send_message(message.chat.id, bot)          
+        if drehzahl=="reboot":
+            os.system('sudo reboot')
+            bot.send_message(message.chat.id, 'Reboote System')
         if drehzahl=="status":
             file = open("/home/pi/TerraPi/status.tmp", "r")
             status=file.read()
