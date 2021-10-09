@@ -27,6 +27,11 @@ raintime8=int(config["Configuration"]["raintime8"])
 raintime9=int(config["Configuration"]["raintime9"])
 raintime10=int(config["Configuration"]["raintime10"])
 
+drytime1=int(config["Configuration"]["drytime1"])
+drytime2=int(config["Configuration"]["drytime2"])
+drytime3=int(config["Configuration"]["drytime3"])
+dry_duration=int(config["Configuration"]["dry_duration"])
+
 status1=int(config["Configuration"]["status1"])
 status2=int(config["Configuration"]["status2"])
 status3=int(config["Configuration"]["status3"])
@@ -44,7 +49,7 @@ ip_shelly1=config["Configuration"]["ip_shelly1"] ###Shelly for rain
 ip_shelly2=config["Configuration"]["ip_shelly2"] ###Shelly for main light
 ip_shelly3=config["Configuration"]["ip_shelly3"] ###Shelly for heating Spot
 
-#ventilation_duration=int(config["Configuration"]["ventilation_duration"]) ###time for ventilation duration
+ventilation_duration=int(config["Configuration"]["ventilation_duration"]) ###time for ventilation duration
 #time_after_rain=int(config["Configuration"]["time_after_rain"]) ###time for delay after rain
 
 rainduration=int(config["Configuration"]["rainduration"])
@@ -242,12 +247,12 @@ def rain():
         pass
       sleep(180)
       lcd.printString("    L\xF5ftung",lcd.LINE_2)
-      lcd.printString("       gestartet",lcd.LINE_3)
+      lcd.printString("     gestartet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(100)
       actualtime = datetime.datetime.now()
       actualtime = actualtime.strftime('%H:%M:%S')
       telegram(actualtime + " Lüftung nach Regen an")
-      sleep(180)
+      sleep(ventilation_duration)
       lcd.printString("     L\xF5ftung",lcd.LINE_2)
       lcd.printString("        beendet",lcd.LINE_3)
       my_pwm.ChangeDutyCycle(0)
@@ -255,7 +260,29 @@ def rain():
       actualtime = actualtime.strftime('%H:%M:%S')
       telegram(actualtime + " Lüftung nach Regen aus")
 
-
+###drying Windows at specific Times
+def drywindows():
+  actualtime = datetime.datetime.now()
+  actualtime = int(actualtime.strftime('%H%M'))
+  drytimes=[drytime1,drytime2,drytime3]
+  for i in range(3):
+    if(drytimes[i] == actualtime):
+      lcd.clear()
+      lcd.printString("    L\xF5ftung",lcd.LINE_2)
+      lcd.printString("     gestartet",lcd.LINE_3)
+      my_pwm.ChangeDutyCycle(100)
+      actualtime = datetime.datetime.now()
+      actualtime = actualtime.strftime('%H:%M:%S')
+      telegram(actualtime + " Lüftung an")
+      sleep(dry_duration)
+      lcd.printString("     L\xF5ftung",lcd.LINE_2)
+      lcd.printString("        beendet",lcd.LINE_3)
+      my_pwm.ChangeDutyCycle(0)
+      actualtime = datetime.datetime.now()
+      actualtime = actualtime.strftime('%H:%M:%S')
+      telegram(actualtime + " Lüftung nach Regen aus")
+    
+      
 ###Fan temperature control with change dutycycle for specific temperatures
 def fan(TempBME280):
   TempBME280=int(TempBME280)
