@@ -89,6 +89,7 @@ def setup():
 ###Mainloop
 def loop():
   rain()
+  drywindows()
   temps_humidity()
   mainlight_timer()
   heating_spot_timer()
